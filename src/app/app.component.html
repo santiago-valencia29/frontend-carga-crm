@@ -1,38 +1,106 @@
-<div id="page-wrapper">
+<div class="container">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mt-3 mb-3">
+    <a class="navbar-brand">Prueba Desarrollo</a>
+    
+    
+  </nav>
+  
 
-  <!-- Header -->
-    <div id="header-wrapper">
-      <header id="header" class="container">
 
-        <!-- Logo -->
-          <div id="logo">
-            <span style="font-size: 24px;">Prueba Desarrollo</span>
+  <div class="jumbotron pt-3 pb-4">
+    <h2>Cargar archivo Campañas del CRM</h2>
+
+    <mat-horizontal-stepper [linear]="isLinear" #stepper>
+      <mat-step [stepControl]="firstFormGroup">
+        <form [formGroup]="firstFormGroup">
+          <ng-template matStepLabel>
+            <div (click)='stepper.reset()'> Elegir separador de cadena</div>
+          </ng-template>
+          <mat-form-field>
+            <mat-label>Separador</mat-label>
+            <input matInput placeholder="Ej: , . - (espacio) (palabra)" formControlName="separator" required>
+          </mat-form-field>
+          <div>
+            <button mat-button matStepperNext>Siguiente</button>
           </div>
-      </header>
-    </div>
+        </form>
+      </mat-step>
+      <mat-step [stepControl]="secondFormGroup">
+        <form [formGroup]="secondFormGroup">
+          <ng-template matStepLabel>Cargar archivo</ng-template>
+          <input formControlName="file" type='file' class="form-control-file" accept='text/plain' multiple
+            (change)='openFile($event)' required>
 
-  <!-- Banner -->
-    <div id="banner-wrapper">
-      <div id="banner" class="box container">
-        <div class="row">
-         
-        </div>
-      </div>
-    </div>
+          <div>
+            <button mat-button matStepperPrevious (click)='stepper.reset()'>Atrás</button>
+            <button mat-button matStepperNext>Siguiente</button>
+          </div>
+        </form>
+      </mat-step>
+      <mat-step>
+        <ng-template matStepLabel>Elegir campos y guardar</ng-template>
+        <div>
+          <form (ngSubmit)="save(form)" #form="ngForm">
 
-  <!-- Footer -->
-    <div id="footer-wrapper">
-      <footer id="footer" class="container">
-        <div class="row">
-          <div class="col-12">
-            <div id="copyright">
-              <ul class="menu">
-                <li>&copy;2020. All rights reserved</li><li>Design by <a href="">Santiago Valencia</a></li>
-              </ul>
+            <div class="form-group">
+              <label>Nombre*:</label>
+              <select class="form-control" name="nombre" [(ngModel)]="nombre" required>
+                <option disabled="" selected="">Selecciona campo correspondiente</option>
+                <option [value]="field" *ngFor="let field of fields">{{field}}</option>
+              </select>
+
             </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+            <div class="form-group">
+              <label>Apellido*:</label>
+              <select class="form-control" name="apellido" [(ngModel)]="apellido" required>
+                <option disabled="" selected="">Selecciona campo correspondiente</option>
+                <option [value]="field" *ngFor="let field of fields">{{field}}</option>
+              </select>
 
+            </div>
+
+            <div class="form-group">
+              <label>Teléfono*:</label>
+              <select class="form-control" name="telefono" [(ngModel)]="telefono" required>
+                <option disabled="" selected="">Selecciona campo correspondiente</option>
+                <option [value]="field" *ngFor="let field of fields">{{field}}</option>
+              </select>
+
+            </div>
+
+            <div class="form-group">
+              <label>Dirección*:</label>
+              <select class="form-control" name="direccion" [(ngModel)]="direccion" required>
+                <option disabled="" selected="">Selecciona campo correspondiente</option>
+                <option [value]="field" *ngFor="let field of fields">{{field}}</option>
+              </select>
+
+            </div>
+
+            <div class="form-group text-center">
+              <button type="submit" class="btn btncolor  w-25 m-2">
+                <i class="fa fa-save"></i>
+                Guardar
+
+              </button>
+
+
+
+            </div>
+          </form>
+
+          <button mat-button matStepperPrevious>Atrás</button>
+          <button mat-button (click)="stepper.reset();reset()">Cancelar carga</button>
+        </div>
+      </mat-step>
+    </mat-horizontal-stepper>
   </div>
+
+
+  
+</div>
+<footer  id="sticky-footer" class="py-4 bg-dark text-white-50">
+  <div class="container text-center">
+    <small>{{anio}}  &copy; My App</small>
+  </div>
+</footer>
