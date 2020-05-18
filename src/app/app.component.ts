@@ -170,7 +170,7 @@ export class AppComponent {
     if (fields.length <= 1) {
       Swal.fire({
         title: 'Error',
-        text: 'No concuerda el formato separador con el archivo',
+        text: 'No concuerda el formato separador con el archivo.',
         icon: 'error',
         confirmButtonColor: '#073642',
       })
@@ -181,7 +181,7 @@ export class AppComponent {
       if (errors[0].code === 'TooManyFields') {
         Swal.fire({
           title: 'Error',
-          text: 'error en el encabezado',
+          text: 'error en el encabezado.',
           icon: 'error',
           confirmButtonColor: '#073642',
         })
