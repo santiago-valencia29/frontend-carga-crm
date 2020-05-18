@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-// import { Ferreteria } from '../../models/dyrcocinas/ferreteria.model';
 import { ClienteCrm } from '../models/cliente-crm.model';
 
 @Injectable({
