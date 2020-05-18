@@ -28,9 +28,7 @@ export class AppComponent {
   telefono: string;
   direccion: string;
 
-  constructor(private papa: Papa, private _formBuilder: FormBuilder, private campanaService: CampanaService) {
-
-  }
+  constructor(private papa: Papa, private _formBuilder: FormBuilder, private campanaService: CampanaService) {}
 
   ngOnInit() {
 
@@ -42,7 +40,6 @@ export class AppComponent {
     });
     this.anio = new Date().getFullYear();
   }
-
 
   openFile(event) {
     //obtener file
@@ -88,9 +85,9 @@ export class AppComponent {
       })
       return;
     }
-    //obtener nombres de campos para almacenar
+    //obtener nombres de campos para asignar
     let data = Object.values(form.value);
-    //valid duplicates
+    //valid duplicates fields save
     if (this.fieldsDuplicate(data)) {
       return
     }
@@ -103,35 +100,35 @@ export class AppComponent {
     //dar formato json a strFile(archivo plano)
     this.parseo(this.strFile)
 
-    //consultar servicio que trae el último código de campaña para adicionarlo a la información y realizae carga.
+    //consultar servicio que trae el último código de campaña para adicionarlo a la información y realizar carga.
     this.campanaService.getLatestCampana().subscribe(resp => {
       if (resp[0].codigo) {
         //seleccionar columnas a cargar
-        let countSave = 0;
-        this.dataFile.map(item => {
-          let dataSave: ClienteCrm = { nombre: item.nombre, apellido: item.apellido, telefono: item.telefono, direccion: item.direccion, codigoCampana: resp[0].codigo };
-          this.campanaService.saveClienteCrm(dataSave).subscribe(
-            resp => {
-              countSave++
-              if (countSave === this.dataFile.length) {
-                Swal.fire({
-                  text: 'Se guardó correctamente',
-                  icon: 'success'
-                })
-                this.reset();
-              }
-            }, error => {
-              console.log(<any>error)
-              Swal.fire({
-                text: error.error.message,
-                icon: 'error'
-              })
-              this.reset();
-            }
-          )
+        let dataSave:ClienteCrm= this.dataFile.map(item => {
+          return { nombre: item.nombre, apellido: item.apellido, telefono: item.telefono, direccion: item.direccion, codigoCampana: resp[0].codigo };
         });
-        form.resetForm();
-
+        //servicio guardar
+        this.campanaService.saveClientesCrm(dataSave).subscribe(
+          resp=>{
+            Swal.fire({
+              text: resp.message,
+              icon: 'success',
+              confirmButtonColor: '#073642',
+            })
+            console.log(resp)
+            this.reset();
+            form.resetForm();
+          },error =>{
+            Swal.fire({
+              title: 'Error de conexión',
+              icon: 'error',
+              text: error.message,
+              confirmButtonColor: '#073642',
+            })
+            this.reset();
+            form.resetForm();
+          }
+        )
       }
     },
       error => {
@@ -142,10 +139,10 @@ export class AppComponent {
           text: error.message,
           confirmButtonColor: '#073642',
         })
+        this.reset();
+        form.resetForm();
       });
   }
-
-
 
   fieldsDuplicate(data): boolean {
     var repetidos = [];

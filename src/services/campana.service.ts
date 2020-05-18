@@ -18,9 +18,8 @@ import { ClienteCrm } from '../models/cliente-crm.model';
             return this._http.get(this.url+'campana-cliente',{headers: this.headers});
         }
 
-        saveClienteCrm(clienteCrm: ClienteCrm): Observable<any>{
+        saveClientesCrm(clienteCrm: ClienteCrm): Observable<any>{
             let params = JSON.stringify(clienteCrm);
             return this._http.post(this.url+'clientecrm/save-clientecrm',params,{headers: this.headers});
         }
-
   }
