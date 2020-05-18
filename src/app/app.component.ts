@@ -94,6 +94,7 @@ export class AppComponent {
     if (this.fieldsDuplicate(data)) {
       return
     }
+    Swal.showLoading();
     //editar nombre de propiedades(columnas) para la carga
     this.strFile = this.strFile.replace(form.value.nombre, "nombre");
     this.strFile = this.strFile.replace(form.value.apellido, "apellido");
@@ -112,13 +113,11 @@ export class AppComponent {
           this.campanaService.saveClienteCrm(dataSave).subscribe(
             resp => {
               countSave++
-              Swal.showLoading();
               if (countSave === this.dataFile.length) {
                 Swal.fire({
                   text: 'Se guardó correctamente',
                   icon: 'success'
                 })
-                form.resetForm();
                 this.reset();
               }
             }, error => {
@@ -127,9 +126,12 @@ export class AppComponent {
                 text: error.error.message,
                 icon: 'error'
               })
+              this.reset();
             }
           )
         });
+        form.resetForm();
+
       }
     },
       error => {
@@ -142,6 +144,9 @@ export class AppComponent {
         })
       });
   }
+
+
+
   fieldsDuplicate(data): boolean {
     var repetidos = [];
     var temporal = [];
