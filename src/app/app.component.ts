@@ -71,7 +71,7 @@ export class AppComponent {
         console.log('Parsed: ', results);
         let errors = results.errors;
         this.fields = results.meta.fields;
-        this.captureErrorsCancel(errors,this.fields);
+        this.captureErrorsCancel(errors, this.fields);
         this.dataFile = results.data;
       }
     };
@@ -106,12 +106,21 @@ export class AppComponent {
     this.campanaService.getLatestCampana().subscribe(resp => {
       if (resp[0].codigo) {
         //seleccionar columnas a cargar
-        let cont = 0;
+        let countSave = 0;
         this.dataFile.map(item => {
           let dataSave: ClienteCrm = { nombre: item.nombre, apellido: item.apellido, telefono: item.telefono, direccion: item.direccion, codigoCampana: resp[0].codigo };
           this.campanaService.saveClienteCrm(dataSave).subscribe(
             resp => {
-              //hacer algo
+              countSave++
+              Swal.showLoading();
+              if (countSave === this.dataFile.length) {
+                Swal.fire({
+                  text: 'Se guardó correctamente',
+                  icon: 'success'
+                })
+                form.resetForm();
+                this.reset();
+              }
             }, error => {
               console.log(<any>error)
               Swal.fire({
@@ -120,7 +129,6 @@ export class AppComponent {
               })
             }
           )
-          console.log(dataSave)
         });
       }
     },
@@ -133,11 +141,7 @@ export class AppComponent {
           confirmButtonColor: '#073642',
         })
       });
-    form.resetForm();
-    this.reset();
-
   }
-
   fieldsDuplicate(data): boolean {
     var repetidos = [];
     var temporal = [];
@@ -162,8 +166,8 @@ export class AppComponent {
     }
   }
 
-  captureErrorsCancel(errors,fields){
-    if(fields.length<=1){
+  captureErrorsCancel(errors, fields) {
+    if (fields.length <= 1) {
       Swal.fire({
         title: 'Error',
         text: 'No concuerda el formato separador con el archivo',
@@ -173,22 +177,22 @@ export class AppComponent {
       this.reset();
       return
     }
-    if(errors.length>0){
-      if(errors[0].code==='TooManyFields'){
+    if (errors.length > 0) {
+      if (errors[0].code === 'TooManyFields') {
         Swal.fire({
           title: 'Error',
           text: 'error en el encabezado',
           icon: 'error',
           confirmButtonColor: '#073642',
         })
-      }else{
-      Swal.fire({
-        title: 'Error',
-        text: 'error en archivo línea:'+parseInt(errors[0].row+2),
-        icon: 'error',
-        confirmButtonColor: '#073642',
-      })
-    }
+      } else {
+        Swal.fire({
+          title: 'Error',
+          text: 'error en archivo línea:' + parseInt(errors[0].row + 2),
+          icon: 'error',
+          confirmButtonColor: '#073642',
+        })
+      }
       this.reset();
       return
     }
