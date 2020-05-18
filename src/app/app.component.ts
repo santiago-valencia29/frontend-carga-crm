@@ -1,11 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-
 import { Papa } from 'ngx-papaparse';
 import { NgForm, FormGroup, FormBuilder, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
-
-
-
+import { CampanaService } from '../services/campana.service';
+import { ClienteCrm } from '../models/cliente-crm.model';
 
 @Component({
   selector: 'app-root',
@@ -14,15 +12,13 @@ import Swal from 'sweetalert2';
 })
 export class AppComponent {
   title = 'prueba-carga-crm';
-  anio:number;
+  anio: number;
 
   @ViewChild('stepper') stepper;
 
   isLinear = true;
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
-
-
 
   fields: [];
   dataFile: any;
@@ -32,8 +28,7 @@ export class AppComponent {
   telefono: string;
   direccion: string;
 
-
-  constructor(private papa: Papa, private _formBuilder: FormBuilder) {
+  constructor(private papa: Papa, private _formBuilder: FormBuilder, private campanaService: CampanaService) {
 
   }
 
@@ -48,35 +43,6 @@ export class AppComponent {
     this.anio = new Date().getFullYear();
   }
 
-  reset() {
-    this.fields = [];
-    this.stepper.reset();
-  }
-
-
-  parseo(data) {
-    let csvData = data;
-    let options = {
-      delimiter: this.firstFormGroup.value.separator,
-      header: true,
-      complete: (results) => {
-        console.log('Parsed: ', results);
-        this.fields = results.meta.fields;
-        if (this.fields.length <= 1) {
-          Swal.fire({
-            title: 'Error',
-            text: 'formato separador no concuerda con el archivo plano.',
-            icon: 'error',
-            confirmButtonColor: '#073642',
-          })
-          this.reset();
-          return
-        }
-        this.dataFile = results.data;
-      }
-    };
-    this.papa.parse(csvData, options);
-  }
 
   openFile(event) {
     //obtener file
@@ -96,6 +62,22 @@ export class AppComponent {
     };
   }
 
+  parseo(data) {
+    let csvData = data;
+    let options = {
+      delimiter: this.firstFormGroup.value.separator,
+      header: true,
+      complete: (results) => {
+        console.log('Parsed: ', results);
+        let errors = results.errors;
+        this.fields = results.meta.fields;
+        this.captureErrorsCancel(errors,this.fields);
+        this.dataFile = results.data;
+      }
+    };
+    this.papa.parse(csvData, options);
+  }
+
   save(form: NgForm) {
     //valid form
     if (form.invalid) {
@@ -106,30 +88,51 @@ export class AppComponent {
       })
       return;
     }
-
     //obtener nombres de campos para almacenar
     let data = Object.values(form.value);
-
     //valid duplicates
     if (this.fieldsDuplicate(data)) {
       return
     }
-
     //editar nombre de propiedades(columnas) para la carga
     this.strFile = this.strFile.replace(form.value.nombre, "nombre");
     this.strFile = this.strFile.replace(form.value.apellido, "apellido");
     this.strFile = this.strFile.replace(form.value.telefono, "telefono");
     this.strFile = this.strFile.replace(form.value.direccion, "direccion");
-
     //dar formato json a strFile(archivo plano)
     this.parseo(this.strFile)
 
-    //seleccionar columnas a cargar
-    var dataSave = this.dataFile.map(item => {
-      return { nombre: item.nombre, apellido: item.apellido, telefono: item.telefono, direccion: item.direccion };
-    });
-    console.log(dataSave)
-
+    //consultar servicio que trae el último código de campaña para adicionarlo a la información y realizae carga.
+    this.campanaService.getLatestCampana().subscribe(resp => {
+      if (resp[0].codigo) {
+        //seleccionar columnas a cargar
+        let cont = 0;
+        this.dataFile.map(item => {
+          let dataSave: ClienteCrm = { nombre: item.nombre, apellido: item.apellido, telefono: item.telefono, direccion: item.direccion, codigoCampana: resp[0].codigo };
+          this.campanaService.saveClienteCrm(dataSave).subscribe(
+            resp => {
+              //hacer algo
+            }, error => {
+              console.log(<any>error)
+              Swal.fire({
+                text: error.error.message,
+                icon: 'error'
+              })
+            }
+          )
+          console.log(dataSave)
+        });
+      }
+    },
+      error => {
+        console.log(<any>error)
+        Swal.fire({
+          title: 'Error de conexión',
+          icon: 'error',
+          text: error.message,
+          confirmButtonColor: '#073642',
+        })
+      });
     form.resetForm();
     this.reset();
 
@@ -138,7 +141,6 @@ export class AppComponent {
   fieldsDuplicate(data): boolean {
     var repetidos = [];
     var temporal = [];
-
     data.forEach((value, index) => {
       //Copiado de elemento
       temporal = Object.assign([], data);
@@ -158,6 +160,44 @@ export class AppComponent {
       })
       return true;
     }
+  }
+
+  captureErrorsCancel(errors,fields){
+    if(fields.length<=1){
+      Swal.fire({
+        title: 'Error',
+        text: 'No concuerda el formato separador con el archivo',
+        icon: 'error',
+        confirmButtonColor: '#073642',
+      })
+      this.reset();
+      return
+    }
+    if(errors.length>0){
+      if(errors[0].code==='TooManyFields'){
+        Swal.fire({
+          title: 'Error',
+          text: 'error en el encabezado',
+          icon: 'error',
+          confirmButtonColor: '#073642',
+        })
+      }else{
+      Swal.fire({
+        title: 'Error',
+        text: 'error en archivo línea:'+parseInt(errors[0].row+2),
+        icon: 'error',
+        confirmButtonColor: '#073642',
+      })
+    }
+      this.reset();
+      return
+    }
+
+  }
+
+  reset() {
+    this.fields = [];
+    this.stepper.reset();
   }
 
 }
